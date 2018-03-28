@@ -9,15 +9,16 @@ from math import log
 from collections import Counter
 from treePlotter import *
 import pickle
-def calcShannonEnt(dataSet):#计算信息熵
-    numEntries = len(dataSet)    #获得数据的长度
+def calcShannonEnt(dataSet):#计算整个样本空间的信息熵
+    numEntries = len(dataSet)    #获得样本的总数
     labelCounts = {}            #用来存储label的dict
-    for featVec in dataSet:    #一行行读取
+    for featVec in dataSet:     #一行行读取
         currentLabel = featVec[-1]  #标签，只有一个
-        if currentLabel not in labelCounts.keys():#统计每个样本所属种类的个数
+        if currentLabel not in labelCounts.keys():   #统计每个样本特征属性的样本个数
             labelCounts[currentLabel] = 0      #如果没有此类型，则为0 
         labelCounts[currentLabel] += 1   #如果在的话计数加1
     shannonEnt = 0.0 #初始化信息熵为0
+#    print(labelCounts)
     for key in labelCounts:
         prob = float(labelCounts[key])/numEntries#所占的比例
         shannonEnt -= prob*log(prob,2)    #信息熵    
@@ -31,6 +32,7 @@ def creatDataSet():
               ]
     labels = ['no surfacing','flippers']
     return dataSet,labels
+#为了计算经验熵，需要划分数据集，以便计算
 def splitDataSet(dataSet,axis,value):#按照特定特征分割数据集：dataet:待划分的数据集，axis为划分数据集的属性（列号），value为用属性的哪个特征划分
     retDataSet = []
     for featVec in dataSet:
@@ -40,18 +42,18 @@ def splitDataSet(dataSet,axis,value):#按照特定特征分割数据集：dataet
             retDataSet.append(reducedFeatVec)
     return retDataSet
 def chooseBestFeatureToSplit(dataSet):
-    numFeatures = len(dataSet[0])-1
-    baseEntropy = calcShannonEnt(dataSet)   #信息熵
-    bestInfoGain = 0.0;bestFeature = -1  #最佳信息增益和最好的特征值
+    numFeatures = len(dataSet[0])-1    #获得特征的总数
+    baseEntropy = calcShannonEnt(dataSet)   #总样本的信息熵
+    bestInfoGain = 0.0; bestFeature = -1  #最佳信息增益和最好的特征值
     for i in range(numFeatures):
         featlist = [example[i] for example in dataSet]  #获得属性值列表
         uniqueVals = set(featlist)  #获得唯一的属性值，set中存储的是互不相同的元素
         newEntropy = 0.0  #定义一个存储按每个属性划分的信息熵，不停改变i*value次
         for value in uniqueVals:
-            subDataSet = splitDataSet(dataSet,i,value)
+            subDataSet = splitDataSet(dataSet,i,value)  #按特征 i 的 value这个属性来划分子集
             prob = len(subDataSet)/float(len(dataSet))
             newEntropy += prob * calcShannonEnt(subDataSet)
-        infoGain = baseEntropy - newEntropy
+        infoGain = baseEntropy - newEntropy         #信息增益  = 总的样本信息熵 - 条件信息熵
         if(infoGain > bestInfoGain):#如果得到的信息增益比之前最好的要好，更新bestinfogain
             bestInfoGain = infoGain
             bestFeature = i          #更新相应的bsetfeature，i对应的属性 能够获得最大信息增益
@@ -102,14 +104,17 @@ def classifier_lenses():
     createPlot(lenseTree)
     
 if __name__ == "__main__":
-    '''
+ 
     myDat,labels = creatDataSet()
+    print(calcShannonEnt(myDat))
+    print(0.6*log(0.6,2)+0.4*log(0.4,2))
+    '''
     myTree = createTree(myDat,labels)
 #    myTree = retrieveTree(1)
     storeTree(myTree,'classifierStorage.txt') #文件名后缀  txt和pkl都可以
     print(grabTree('classifierStorage.txt'))
     '''
-    classifier_lenses()  #隐形眼镜预测
+#    classifier_lenses()  #隐形眼镜预测
     
     
     
